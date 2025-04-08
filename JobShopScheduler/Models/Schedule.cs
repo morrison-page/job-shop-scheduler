@@ -1,0 +1,17 @@
+﻿using System.Collections.Generic;
+
+namespace JobShopScheduler.Models
+{
+    public class Schedule
+    {
+        public List<int> JobSequence { get; set; } = new();
+        public int Fitness { get; set; } = int.MaxValue;
+
+        public Schedule Clone() => new Schedule
+        {
+            JobSequence = new List<int>(JobSequence),
+            Fitness = Fitness
+        };
+    }
+
+}

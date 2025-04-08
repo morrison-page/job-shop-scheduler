@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35828.75 d17.13
+VisualStudioVersion = 17.13.35828.75
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobShopScheduler", "JobShopScheduler\JobShopScheduler.csproj", "{E21CD29B-88E0-442C-B35D-98241CCEA4D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobShopScheduler.Tests", "JobShopScheduler.Tests\JobShopScheduler.Tests.csproj", "{670BB97C-CD94-4AC1-9931-2029DE259462}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{E21CD29B-88E0-442C-B35D-98241CCEA4D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E21CD29B-88E0-442C-B35D-98241CCEA4D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E21CD29B-88E0-442C-B35D-98241CCEA4D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{670BB97C-CD94-4AC1-9931-2029DE259462}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{670BB97C-CD94-4AC1-9931-2029DE259462}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{670BB97C-CD94-4AC1-9931-2029DE259462}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{670BB97C-CD94-4AC1-9931-2029DE259462}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
