@@ -85,6 +85,5 @@ namespace JobShopScheduler
             Console.WriteLine("+--------+--------------+----------------------+------------+----------+----------+");
             Console.WriteLine($"\nMakespan: {makespan} hours\n");
         }
-
     }
 }

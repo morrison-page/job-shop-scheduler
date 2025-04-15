@@ -14,5 +14,4 @@ namespace JobShopScheduler.Models
 
         public void Reset() => NextOpIndex = 0;
     }
-
 }

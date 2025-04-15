@@ -13,5 +13,4 @@ namespace JobShopScheduler.Models
             Fitness = Fitness
         };
     }
-
 }

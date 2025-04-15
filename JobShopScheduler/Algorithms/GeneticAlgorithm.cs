@@ -156,5 +156,4 @@ namespace JobShopScheduler.Algorithms
             (s.JobSequence[a], s.JobSequence[b]) = (s.JobSequence[b], s.JobSequence[a]);
         }
     }
-
 }
