@@ -9,6 +9,7 @@ namespace JobShopScheduler.Algorithms
     {
         private const int POPULATION_SIZE = 100;
         private const int GENERATION_QUANTITY = 100;
+        private const int SELECTION_CANDIDATES_PER_ROUND = 3;
         private readonly Random _random = new();
         private readonly List<Job> _jobs;
 
@@ -37,6 +38,25 @@ namespace JobShopScheduler.Algorithms
                             ProcessingTime = o.ProcessingTime
                         }).ToList()
                     }).ToList());
+
+                population = population.OrderBy(c => c.Fitness).ToList();
+                if (population[0].Fitness < best.Fitness) 
+                    best = population[0].Clone();
+
+                List<Schedule> newPopulation = new List<Schedule> { best.Clone() }; // elitism
+
+                while (newPopulation.Count < POPULATION_SIZE)
+                {
+                    Schedule parent1 = Selection(population);
+                    Schedule parent2 = Selection(population);
+
+                    Schedule child = Crossover(parent1, parent2);
+                    Mutate(child);
+
+                    newPopulation.Add(child);
+                }
+
+                population = newPopulation;
             }
 
             return best;
@@ -90,6 +110,50 @@ namespace JobShopScheduler.Algorithms
             }
 
             return globalEndTime;
+        }
+
+        private Schedule Selection(List<Schedule> pop) => pop.OrderBy(_ => _random.Next()).Take(SELECTION_CANDIDATES_PER_ROUND).OrderBy(static c => c.Fitness).First();
+
+        private Schedule Crossover(Schedule a, Schedule b)
+        {
+            int size = a.JobSequence.Count;
+            List<int> childGenes = new(new int[size]);
+            Dictionary<int, int> seen = new();
+
+            int start = _random.Next(size / 2);
+            int end = _random.Next(start + 1, size);
+
+            // Copy segment from parent A
+            for (int i = start; i < end; i++)
+            {
+                childGenes[i] = a.JobSequence[i];
+                seen.TryAdd(childGenes[i], 0);
+                seen[childGenes[i]]++;
+            }
+
+            // Fill rest from B
+            int bIndex = 0;
+            for (int i = 0; i < size; i++)
+            {
+                if (i >= start && i < end) continue;
+                while (seen.TryGetValue(b.JobSequence[bIndex], out int count) &&
+                       count >= _jobs.First(j => j.JobId == b.JobSequence[bIndex]).Operations.Count)
+                    bIndex++;
+
+                int gene = b.JobSequence[bIndex++];
+                childGenes[i] = gene;
+                seen.TryAdd(gene, 0);
+                seen[gene]++;
+            }
+
+            return new Schedule { JobSequence = childGenes };
+        }
+
+        private void Mutate(Schedule s)
+        {
+            int a = _random.Next(s.JobSequence.Count);
+            int b = _random.Next(s.JobSequence.Count);
+            (s.JobSequence[a], s.JobSequence[b]) = (s.JobSequence[b], s.JobSequence[a]);
         }
     }
 
