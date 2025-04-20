@@ -1,11 +1,12 @@
-﻿using JobShopScheduler.Models;
+﻿using JobShopScheduler.Interfaces;
+using JobShopScheduler.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace JobShopScheduler.Algorithms
+namespace JobShopScheduler.Solvers
 {
-    public class GeneticAlgorithm
+    public class GeneticAlgorithm : IScheduleSolver
     {
         private const int POPULATION_SIZE = 100;
         private const int GENERATION_QUANTITY = 100;
