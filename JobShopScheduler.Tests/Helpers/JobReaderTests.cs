@@ -1,4 +1,7 @@
-﻿namespace JobShopScheduler.Tests.Helpers
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+
+namespace JobShopScheduler.Tests.Helpers
 {
     [TestClass]
     public sealed class JobReaderTests
