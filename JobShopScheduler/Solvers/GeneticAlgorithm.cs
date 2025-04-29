@@ -3,14 +3,15 @@ using JobShopScheduler.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace JobShopScheduler.Solvers
 {
     public class GeneticAlgorithm : IScheduleSolver
     {
-        private const int POPULATION_SIZE = 100;
-        private const int GENERATION_QUANTITY = 100;
-        private const int SELECTION_CANDIDATES_PER_ROUND = 3;
+        private const int POPULATION_SIZE = 50;
+        private const int GENERATION_QUANTITY = 50;
+        private const int SELECTION_CANDIDATES_PER_ROUND = 5;
         private readonly Random _random = new();
         private readonly List<Job> _jobs;
 
@@ -27,8 +28,9 @@ namespace JobShopScheduler.Solvers
 
             for (int g = 0; g < GENERATION_QUANTITY; g++)
             {
-                foreach (Schedule s in population)
-                    s.Fitness = Evaluate(s, _jobs.Select(j => new Job
+                Parallel.ForEach(population, schedule =>
+                {
+                    schedule.Fitness = Evaluate(schedule, _jobs.Select(j => new Job
                     {
                         JobId = j.JobId,
                         Operations = j.Operations.Select(o => new Operation
@@ -39,6 +41,7 @@ namespace JobShopScheduler.Solvers
                             ProcessingTime = o.ProcessingTime
                         }).ToList()
                     }).ToList());
+                });
 
                 population = population.OrderBy(c => c.Fitness).ToList();
                 if (population[0].Fitness < best.Fitness) 
@@ -46,7 +49,8 @@ namespace JobShopScheduler.Solvers
 
                 List<Schedule> newPopulation = new List<Schedule> { best.Clone() }; // elitism
 
-                while (newPopulation.Count < POPULATION_SIZE)
+                object lockObj = new();
+                Parallel.For(newPopulation.Count, POPULATION_SIZE, _ =>
                 {
                     Schedule parent1 = Selection(population);
                     Schedule parent2 = Selection(population);
@@ -54,8 +58,11 @@ namespace JobShopScheduler.Solvers
                     Schedule child = Crossover(parent1, parent2);
                     Mutate(child);
 
-                    newPopulation.Add(child);
-                }
+                    lock (lockObj)
+                    {
+                        newPopulation.Add(child);
+                    }
+                });
 
                 population = newPopulation;
             }

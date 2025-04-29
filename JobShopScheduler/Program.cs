@@ -3,7 +3,9 @@ using JobShopScheduler.Interfaces;
 using JobShopScheduler.Models;
 using JobShopScheduler.Solvers;
 using JobShopScheduler.Writers;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace JobShopScheduler
 {
@@ -11,14 +13,27 @@ namespace JobShopScheduler
     {
         static void Main(string[] args)
         {
-            string filePath = "../../../Jobs/jobs_small.csv";
+            string filePath = "../../../Jobs/jobs_pleaseStop.csv";
             List<Job> jobs = JobReader.ReadJobs(filePath);
 
+            Stopwatch sw = new();
+            
             IScheduleSolver solver = new GeneticAlgorithm(jobs);
+            sw.Start();
             Schedule schedule = solver.Solve();
+            for (int i = 0; i < 10; i++)
+            { 
+                Schedule compareSchedule = solver.Solve();
+                if (compareSchedule.Fitness < schedule.Fitness)
+                {
+                    schedule = compareSchedule;
+                }
+            }
+            sw.Stop();
 
             IScheduleExporter exporter = new ConsoleExporter();
             exporter.Export(schedule, jobs);
+            Console.WriteLine(sw.ElapsedMilliseconds.ToString());
         }
     }
 }
