@@ -5,6 +5,6 @@ namespace JobShopScheduler.Interfaces
 {
     internal interface IScheduleExporter
     {
-        void Export(Schedule schedule, List<Job> jobs);
+        void Export(Schedule schedule);
     }
 }

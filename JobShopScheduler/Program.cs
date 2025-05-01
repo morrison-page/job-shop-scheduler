@@ -2,7 +2,7 @@
 using JobShopScheduler.Interfaces;
 using JobShopScheduler.Models;
 using JobShopScheduler.Solvers;
-using JobShopScheduler.Writers;
+using JobShopScheduler.Exporters;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,8 +30,8 @@ namespace JobShopScheduler
             sw.Stop();
             
             IScheduleExporter exporter = new ConsoleExporter();
-            exporter.Export(schedule, jobs);
-            Console.WriteLine(sw.ElapsedMilliseconds.ToString());
+            exporter.Export(schedule);
+            Console.WriteLine($"{sw.ElapsedMilliseconds.ToString()}ms");
         }
     }
 }

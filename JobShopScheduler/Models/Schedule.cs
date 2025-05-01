@@ -5,6 +5,7 @@ namespace JobShopScheduler.Models
     public class Schedule
     {
         public List<int> JobSequence { get; set; } = new();
+        public List<Job> EvaluatedJobs { get; set; } = new();
         public int Fitness { get; set; } = int.MaxValue;
 
         public Schedule Clone() => new()

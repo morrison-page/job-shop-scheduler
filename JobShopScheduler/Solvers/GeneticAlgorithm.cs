@@ -67,6 +67,21 @@ namespace JobShopScheduler.Solvers
                 population = newPopulation;
             }
 
+            List<Job> finalEvaluatedJobs = _jobs.Select(j => new Job
+            {
+                JobId = j.JobId,
+                Operations = j.Operations.Select(o => new Operation
+                {
+                    JobId = o.JobId,
+                    OperationId = o.OperationId,
+                    Subdivision = o.Subdivision,
+                    ProcessingTime = o.ProcessingTime
+                }).ToList()
+            }).ToList();
+
+            Evaluate(best, finalEvaluatedJobs);
+            best.EvaluatedJobs = finalEvaluatedJobs;
+
             return best;
         }
 
@@ -84,7 +99,7 @@ namespace JobShopScheduler.Solvers
             return population;
         }
 
-        public static int Evaluate(Schedule schedule, List<Job> jobs)
+        private int Evaluate(Schedule schedule, List<Job> jobs)
         {
             Dictionary<string, int> machineAvailability = new();
             Dictionary<int, int> jobOperationAvailability = new();
