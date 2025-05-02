@@ -10,4 +10,8 @@
     <Folder Include="Jobs\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Terminal.Gui" Version="1.18.1" />
+  </ItemGroup>
+
 </Project>
