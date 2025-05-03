@@ -56,11 +56,9 @@ namespace JobShopScheduler.Tests.Solvers
             );
 
             GeneticAlgorithm solver = new(jobs);
-            ConsoleExporter exporter = new();
 
             // Act
             Schedule schedule = solver.Solve();
-            exporter.Export(schedule, jobs); // Export the schedule to console
 
             // Assert
             Dictionary<string, int> machineAvailability = new();

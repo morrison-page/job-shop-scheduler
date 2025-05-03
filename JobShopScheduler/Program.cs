@@ -73,7 +73,6 @@ namespace JobShopScheduler
                     if (exporterLabel.Text.ToString() == "Exporter: ConsoleExporter")
                     {
                         Console.Clear();
-                        exporter.Export(schedule);
                     }
 
                     exporter.Export(schedule);
