@@ -1,6 +1,7 @@
 ﻿using JobShopScheduler.Interfaces;
 using JobShopScheduler.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,13 +45,13 @@ namespace JobShopScheduler.Solvers
                 });
 
                 population = population.OrderBy(c => c.Fitness).ToList();
-                if (population[0].Fitness < best.Fitness) 
+                if (population[0].Fitness < best.Fitness)
                     best = population[0].Clone();
 
-                List<Schedule> newPopulation = new List<Schedule> { best.Clone() }; // elitism
+                List<Schedule> newPopulation = new(new Schedule[POPULATION_SIZE]);
+                newPopulation[0] = best.Clone(); // elitism
 
-                object lockObj = new();
-                Parallel.For(newPopulation.Count, POPULATION_SIZE, _ =>
+                Parallel.For(1, POPULATION_SIZE, i =>
                 {
                     Schedule parent1 = Selection(population);
                     Schedule parent2 = Selection(population);
@@ -58,10 +59,7 @@ namespace JobShopScheduler.Solvers
                     Schedule child = Crossover(parent1, parent2);
                     Mutate(child);
 
-                    lock (lockObj)
-                    {
-                        newPopulation.Add(child);
-                    }
+                    newPopulation[i] = child;
                 });
 
                 population = newPopulation;
