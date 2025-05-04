@@ -1,13 +1,15 @@
 ﻿using JobShopScheduler.Interfaces;
 using JobShopScheduler.Models;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace JobShopScheduler.Solvers
 {
+    /// <summary>
+    /// Implements a genetic algorithm to solve the job shop scheduling problem.
+    /// </summary>
     public class GeneticAlgorithm : IScheduleSolver
     {
         private const int POPULATION_SIZE = 50;
@@ -16,11 +18,19 @@ namespace JobShopScheduler.Solvers
         private readonly Random _random = new();
         private readonly List<Job> _jobs;
 
+        /// <summary>
+        /// Initialises a new instance of the <see cref="GeneticAlgorithm"/> class.
+        /// </summary>
+        /// <param name="jobs">The list of jobs to be scheduled.</param>
         public GeneticAlgorithm(List<Job> jobs)
         {
             _jobs = jobs;
         }
 
+        /// <summary>
+        /// Solves the scheduling problem using a genetic algorithm and returns the best schedule.
+        /// </summary>
+        /// <returns>A <see cref="Schedule"/> object representing the optimal or near-optimal solution.</returns>
         public Schedule Solve()
         {
             List<Schedule> population = InitialisePopulation();
@@ -29,6 +39,7 @@ namespace JobShopScheduler.Solvers
 
             for (int g = 0; g < GENERATION_QUANTITY; g++)
             {
+                // Evaluate the fitness of each schedule in the population.
                 Parallel.ForEach(population, schedule =>
                 {
                     schedule.Fitness = Evaluate(schedule, _jobs.Select(j => new Job
@@ -44,12 +55,14 @@ namespace JobShopScheduler.Solvers
                     }).ToList());
                 });
 
+                // Sort the population by fitness and update the best schedule.
                 population = population.OrderBy(c => c.Fitness).ToList();
                 if (population[0].Fitness < best.Fitness)
                     best = population[0].Clone();
 
+                // Create a new population using elitism, crossover, and mutation.
                 List<Schedule> newPopulation = new(new Schedule[POPULATION_SIZE]);
-                newPopulation[0] = best.Clone(); // elitism
+                newPopulation[0] = best.Clone(); // Elitism
 
                 Parallel.For(1, POPULATION_SIZE, i =>
                 {
@@ -65,6 +78,7 @@ namespace JobShopScheduler.Solvers
                 population = newPopulation;
             }
 
+            // Evaluate the best schedule with the final job states.
             List<Job> finalEvaluatedJobs = _jobs.Select(j => new Job
             {
                 JobId = j.JobId,
@@ -83,6 +97,10 @@ namespace JobShopScheduler.Solvers
             return best;
         }
 
+        /// <summary>
+        /// Initialises the population of schedules with random job sequences.
+        /// </summary>
+        /// <returns>A list of randomly generated <see cref="Schedule"/> objects.</returns>
         private List<Schedule> InitialisePopulation()
         {
             List<int> genePool = _jobs.SelectMany(j => Enumerable.Repeat(j.JobId, j.Operations.Count)).ToList();
@@ -97,6 +115,12 @@ namespace JobShopScheduler.Solvers
             return population;
         }
 
+        /// <summary>
+        /// Evaluates the fitness of a schedule by simulating the job execution.
+        /// </summary>
+        /// <param name="schedule">The schedule to evaluate.</param>
+        /// <param name="jobs">The list of jobs to simulate.</param>
+        /// <returns>The fitness value of the schedule, representing the makespan.</returns>
         private int Evaluate(Schedule schedule, List<Job> jobs)
         {
             Dictionary<string, int> machineAvailability = new();
@@ -133,8 +157,25 @@ namespace JobShopScheduler.Solvers
             return globalEndTime;
         }
 
-        private Schedule Selection(List<Schedule> pop) => pop.OrderBy(_ => _random.Next()).Take(SELECTION_CANDIDATES_PER_ROUND).OrderBy(static c => c.Fitness).First();
+        /// <summary>
+        /// Selects a parent schedule from the population using tournament selection.
+        /// </summary>
+        /// <param name="pop">The population of schedules.</param>
+        /// <returns>The selected <see cref="Schedule"/>.</returns>
+        private Schedule Selection(List<Schedule> pop) =>
+            pop.OrderBy(_ => _random.Next())
+               .Take(SELECTION_CANDIDATES_PER_ROUND)
+               .OrderBy(static c => c.Fitness)
+               .First();
 
+        /// <summary>
+        /// Performs a Partially Mapped Crossover (PMX) variant between two parent schedules
+        /// to produce a child schedule. This ensures the child inherits a valid sequence
+        /// of job operations while preserving genetic diversity.
+        /// </summary>
+        /// <param name="a">The first parent schedule.</param>
+        /// <param name="b">The second parent schedule.</param>
+        /// <returns>A new <see cref="Schedule"/> object representing the child.</returns>
         private Schedule Crossover(Schedule a, Schedule b)
         {
             int size = a.JobSequence.Count;
@@ -170,6 +211,15 @@ namespace JobShopScheduler.Solvers
             return new Schedule { JobSequence = childGenes };
         }
 
+        /// <summary>
+        /// Mutates a schedule by swapping two random genes in its job sequence.
+        /// </summary>
+        /// <remarks>
+        /// This uses a swap mutation strategy, where two random positions in the job sequence
+        /// are selected, and their values are swapped. This ensures that the mutation returns a 
+        /// valid schedule while introducing small random changes.
+        /// </remarks>
+        /// <param name="s">The schedule to mutate.</param>
         private void Mutate(Schedule s)
         {
             int a = _random.Next(s.JobSequence.Count);
