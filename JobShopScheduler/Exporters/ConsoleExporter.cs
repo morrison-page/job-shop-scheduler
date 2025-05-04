@@ -6,8 +6,15 @@ using System.Linq;
 
 namespace JobShopScheduler.Exporters
 {
-    public class ConsoleExporter : IScheduleExporter 
+    /// <summary>
+    /// Exports a job schedule to the console in a tabular format.
+    /// </summary>
+    public class ConsoleExporter : IScheduleExporter
     {
+        /// <summary>
+        /// Exports the provided schedule to the console.
+        /// </summary>
+        /// <param name="schedule">The schedule to be exported, containing evaluated jobs and their operations.</param>
         public void Export(Schedule schedule)
         {
             Console.WriteLine("Press any key to display the next time slot or 'q' to quit...\n");
@@ -22,6 +29,7 @@ namespace JobShopScheduler.Exporters
             const int timeColumnWidth = 19;
             const int columnWidth = 17;
 
+            // Print table header.
             Console.Write($"+{new string('-', timeColumnWidth)}+");
             foreach (string subdivision in subdivisions)
             {
@@ -42,11 +50,14 @@ namespace JobShopScheduler.Exporters
             Console.WriteLine();
 
             DateTime startTime = new DateTime(2023, 1, 2, 9, 0, 0); // Monday 09:00
+
+            // Group operations by their time slots.
             var timeSlots = schedule.EvaluatedJobs
                 .SelectMany(job => job.Operations)
                 .GroupBy(op => new { op.StartTime, op.EndTime })
                 .OrderBy(g => g.Key.StartTime);
 
+            // Iterate through each time slot and display operations.
             foreach (var timeSlot in timeSlots)
             {
                 var key = Console.ReadKey(intercept: true).Key;
@@ -75,6 +86,7 @@ namespace JobShopScheduler.Exporters
                 Console.WriteLine();
             }
 
+            // Print table footer.
             Console.Write($"+-------------------+");
             foreach (var subdivision in subdivisions)
             {
