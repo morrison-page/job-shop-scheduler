@@ -12,8 +12,15 @@ using System.Threading.Tasks;
 
 namespace JobShopScheduler
 {
+    /// <summary>
+    /// Entry point for the Job Shop Scheduler application.
+    /// </summary>
     internal class Program
     {
+        /// <summary>
+        /// Main method to initialise and run the application.
+        /// </summary>
+        /// <param name="args">Command-line arguments (not used).</param>
         static void Main(string[] args)
         {
             Schedule schedule = null;
@@ -32,10 +39,11 @@ namespace JobShopScheduler
 
             // Right Pane Buttons
             Button exportButton = null;
-            exportButton = ComponentFactory.CreateButton("Export Schedule", Pos.Center(), Pos.Bottom(solvingTimeLabel) + 2, onClick: () => 
+            exportButton = ComponentFactory.CreateButton("Export Schedule", Pos.Center(), Pos.Bottom(solvingTimeLabel) + 2, onClick: () =>
             {
                 exportButton.Enabled = false;
 
+                // Ensure an exporter is selected before proceeding.
                 if (exporterLabel.Text.ToString() == "Exporter: Not selected")
                 {
                     MessageBox.ErrorQuery("Error", "Please select an exporter before exporting the schedule.", "OK");
@@ -45,11 +53,11 @@ namespace JobShopScheduler
 
                 try
                 {
-                    // Extract selected exporter name
-                    var exporterName = exporterLabel.Text.ToString().Replace("Exporter: ", "");
+                    // Extract selected exporter name.
+                    string exporterName = exporterLabel.Text.ToString().Replace("Exporter: ", "");
 
-                    // Use reflection to instantiate exporter
-                    var exporterType = Assembly.GetExecutingAssembly()
+                    // Use reflection to instantiate the exporter.
+                    Type? exporterType = Assembly.GetExecutingAssembly()
                         .GetTypes()
                         .FirstOrDefault(t => t.Name == exporterName && typeof(IScheduleExporter).IsAssignableFrom(t));
 
@@ -62,7 +70,7 @@ namespace JobShopScheduler
 
                     IScheduleExporter exporter = (IScheduleExporter)Activator.CreateInstance(exporterType);
 
-                    // Export the schedule
+                    // Ensure a schedule is available to export.
                     if (schedule == null)
                     {
                         MessageBox.ErrorQuery("Error", "No schedule available to export. Please run the solver first.", "OK");
@@ -70,11 +78,13 @@ namespace JobShopScheduler
                         return;
                     }
 
+                    // Clear the console if the ConsoleExporter is selected.
                     if (exporterLabel.Text.ToString() == "Exporter: ConsoleExporter")
                     {
                         Console.Clear();
                     }
 
+                    // Export the schedule.
                     exporter.Export(schedule);
                 }
                 catch (Exception ex)
@@ -83,7 +93,7 @@ namespace JobShopScheduler
                 }
                 finally
                 {
-                    // Reactivate the button
+                    // Reactivate the button.
                     exportButton.Enabled = true;
                 }
             });
@@ -94,7 +104,7 @@ namespace JobShopScheduler
             {
                 solveButton.Enabled = false;
 
-                // Check if dataset, solver, and exporter are selected
+                // Ensure dataset, solver, and exporter are selected before running the solver.
                 if (datasetLabel.Text.ToString() == "Dataset: Not selected")
                 {
                     MessageBox.ErrorQuery("Error", "Please select a dataset before running the solver.", "OK");
@@ -111,39 +121,41 @@ namespace JobShopScheduler
 
                 try
                 {
-                    // Extract selected dataset, solver, and exporter names
-                    var datasetPath = datasetLabel.Text.ToString().Replace("Dataset: ", "");
-                    var solverName = solverLabel.Text.ToString().Replace("Solver: ", "");
+                    // Extract selected dataset and solver names.
+                    string datasetPath = datasetLabel.Text.ToString().Replace("Dataset: ", "");
+                    string solverName = solverLabel.Text.ToString().Replace("Solver: ", "");
 
-                    // Use reflection to instantiate solver
-                    var solverType = Assembly.GetExecutingAssembly()
+                    // Use reflection to instantiate the solver.
+                    Type? solverType = Assembly.GetExecutingAssembly()
                         .GetTypes()
                         .FirstOrDefault(t => t.Name == solverName && typeof(IScheduleSolver).IsAssignableFrom(t));
 
                     if (solverType == null)
                     {
                         MessageBox.ErrorQuery("Error", "Failed to instantiate solver.", "OK");
-                        solveButton.Enabled = true; // Reactivate the button
+                        solveButton.Enabled = true;
                         return;
                     }
 
+                    // Read jobs from the selected dataset.
                     List<Job> jobs = JobReader.ReadJobs(datasetPath);
 
                     if (jobs == null || !jobs.Any())
                     {
                         MessageBox.ErrorQuery("Error", "Failed to parse jobs from the selected dataset.", "OK");
-                        solveButton.Enabled = true; // Reactivate the button
+                        solveButton.Enabled = true;
                         return;
                     }
 
                     IScheduleSolver solver = (IScheduleSolver)Activator.CreateInstance(solverType, jobs);
 
-                    // Run the solver asynchronously
+                    // Run the solver asynchronously to avoid blocking the UI.
                     Stopwatch stopwatch = new();
                     stopwatch.Start();
 
                     schedule = await Task.Run(() =>
                     {
+                        // Use a multi-start strategy to find the best schedule.
                         Schedule bestSchedule = solver.Solve();
                         for (int i = 0; i < 40; i++)
                         {
@@ -156,6 +168,7 @@ namespace JobShopScheduler
 
                     stopwatch.Stop();
 
+                    // Update the UI with the results.
                     makespanLabel.Text = $"Makespan: {schedule.Fitness.ToString()}";
                     solvingTimeLabel.Text = $"Solving Time: {stopwatch.ElapsedMilliseconds.ToString()}ms";
                 }
@@ -165,18 +178,17 @@ namespace JobShopScheduler
                 }
                 finally
                 {
-                    // Reactivate the button
+                    // Reactivate the button.
                     solveButton.Enabled = true;
                 }
             });
 
-
-            // Build UI components
+            // Build UI components.
             MenuBar menu = MenuBarBuilder.BuildMenuBar(datasetLabel, solverLabel, exporterLabel);
             View leftPane = LeftPaneBuilder.BuildLeftPane(datasetLabel, solverLabel, exporterLabel, solveButton);
             View rightPane = RightPaneBuilder.BuildRightPane(makespanLabel, solvingTimeLabel, exportButton);
 
-            // Frame setup
+            // Frame setup.
             View frame = new FrameView(" Job Shop Scheduler ")
             {
                 X = 0,
