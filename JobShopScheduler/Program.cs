@@ -153,17 +153,22 @@ namespace JobShopScheduler
                     Stopwatch stopwatch = new();
                     stopwatch.Start();
 
-                    schedule = await Task.Run(() =>
+                    schedule = await Task.Run(async () =>
                     {
-                        // Use a multi-start strategy to find the best schedule.
-                        Schedule bestSchedule = solver.Solve();
-                        for (int i = 0; i < 40; i++)
+                        int multiStartCount = 40; // Number of times to run the solver.
+                        List<Task<Schedule>> tasks = new();
+
+                        // Create tasks to run the solver concurrently.
+                        for (int i = 0; i < multiStartCount; i++)
                         {
-                            Schedule compareSchedule = solver.Solve();
-                            if (compareSchedule.Fitness < bestSchedule.Fitness)
-                                bestSchedule = compareSchedule;
+                            tasks.Add(Task.Run(() => solver.Solve()));
                         }
-                        return bestSchedule;
+
+                        // Wait for all tasks to complete.
+                        Schedule[] results = await Task.WhenAll(tasks);
+
+                        // Find the best schedule among the results.
+                        return results.OrderBy(s => s.Fitness).First();
                     });
 
                     stopwatch.Stop();
